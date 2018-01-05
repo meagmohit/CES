@@ -1,8 +1,14 @@
 **/*.data
 **/*.pyc
 **/*.temp
+**/*.pdf
 **/*.out
 
 **/logs
 **/data
-
+**/result
+**/out
+**/out-old
+**/archives
+/.*
+**/.*
