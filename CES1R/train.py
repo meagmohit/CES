@@ -67,7 +67,7 @@ class model(object):
     self._learning_rate = tf.Variable(config.learning_rate, trainable=False)
 
     with tf.name_scope('input'):
-      self._input_feature = input_feature = tf.placeholder(tf.float32,  shape=[batch_size, step_size, num_electrodes], name='feature_input')
+      self._input_feature = input_feature = tf.placeholder(tf.float32,  shape=[batch_size, step_size, 5], name='feature_input')
       self._input_targets = input_targets = tf.placeholder(tf.int32, shape=[batch_size, num_class])
 
     layer_name = 'LSTM'
