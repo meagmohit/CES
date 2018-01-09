@@ -40,13 +40,13 @@ class input(object):
       lab_temp = f_temp.read()
       f_temp.close()
       if lab_temp=='Like':
-        label[ind,0]=0
-      elif lab_temp=='Disike':
         label[ind,0]=1
+      elif lab_temp=='Disike':
+        label[ind,0]=2
       else:
         print("\033[91m  Error in Labels check .. \033[0m")
     csp = mne.decoding.CSP(n_components=5, cov_est='epoch', transform_into='csp_space')
-    self._csp = csp.fit(data,label)
+    self._csp = mycsp = csp.fit(data,label)
     
      
   def next_batch(self, sess, flag):
@@ -65,17 +65,17 @@ class input(object):
       return
 
     
-    data = np.zeros([self._batch_size, self._step_size, self._num_electrodes])
+    data = np.zeros([self._batch_size, self._step_size, 5])
     label = np.zeros([self._batch_size, self._num_class])
     
     for ind, filename in enumerate(batch_files):
       filepath_data = os.path.join('data/',mode_str,filename +'.txt')
       filepath_lab = os.path.join('data/',mode_str,filename +'.lab')
-      X = np.transpose(np.loadtxt(filepath_data))
-      rdata = np.transpose(self._csp.transform(X))
+      X = (np.loadtxt(filepath_data))
+      rdata = (self._csp.transform(X))
       # Data Pre-Processing
       # Normalization
-      data[ind, :, :] = np.multiply(rdata - (rdata.mean(0).reshape([1,self._num_electrodes])), 1/(10e-12 + rdata.std(0).reshape([1,self._num_electrodes])))
+      data[ind, :, :] = np.multiply(rdata - (rdata.mean(0).reshape([1,5])), 1/(10e-12 + rdata.std(0).reshape([1,5])))
       f_temp = open(filepath_lab,'r')
       lab_temp = f_temp.read()
       f_temp.close()
