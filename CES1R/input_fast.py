@@ -1,7 +1,11 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+import sys
+sys.path.append('/g/g91/agarwal3/mne-python/')
 
+
+import mne
 import os
 import numpy as np
 import tensorflow as tf
@@ -24,7 +28,27 @@ class input(object):
 
     self._train_total = len(train_files)
     self._test_total = len(test_files)
- 
+
+    data = np.zeros([self._train_total, self._num_electrodes, self._step_size])
+    label = np.zeros([self._train_total, 1])
+    for ind in xrange(self._train_total):
+      filename = self._train_files[ind]
+      filepath_data = os.path.join('data/','train',filename +'.txt')
+      filepath_lab = os.path.join('data/','train',filename +'.lab')
+      data[ind,:,:] = np.transpose(np.loadtxt(filepath_data))
+      f_temp = open(filepath_lab,'r')
+      lab_temp = f_temp.read()
+      f_temp.close()
+      if lab_temp=='Like':
+        label[ind,0]=0
+      elif lab_temp=='Disike':
+        label[ind,0]=1
+      else:
+        print("\033[91m  Error in Labels check .. \033[0m")
+    csp = mne.decoding.CSP(n_components=5, cov_est='epoch', transform_into='csp_space')
+    self._csp = csp.fit(data,label)
+    
+     
   def next_batch(self, sess, flag):
     if flag=='train':
       total_files = self._train_total
@@ -47,7 +71,8 @@ class input(object):
     for ind, filename in enumerate(batch_files):
       filepath_data = os.path.join('data/',mode_str,filename +'.txt')
       filepath_lab = os.path.join('data/',mode_str,filename +'.lab')
-      rdata = np.loadtxt(filepath_data)
+      X = np.transpose(np.loadtxt(filepath_data))
+      rdata = np.transpose(self._csp.transform(X))
       # Data Pre-Processing
       # Normalization
       data[ind, :, :] = np.multiply(rdata - (rdata.mean(0).reshape([1,self._num_electrodes])), 1/(10e-12 + rdata.std(0).reshape([1,self._num_electrodes])))

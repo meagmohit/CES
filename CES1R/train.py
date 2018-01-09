@@ -19,6 +19,8 @@ from tensorflow.python.framework import tensor_shape
 from tensorflow.python.platform import gfile
 from tensorflow.python.ops import rnn, rnn_cell
 
+sys.path.append(os.getcwd()) 
+
 import input_fast as input
 
 
@@ -41,11 +43,11 @@ tf.app.flags.DEFINE_integer('learning_rate_iter',1000,""" The factor with which 
 
 class Config(object):
   #Parameter which can't be changed once the model is created
-  hidden_size_lstm = 256
-  hidden_size_fc1 = 64
-  num_lstm_layers = 3
+  hidden_size_lstm = 16
+  hidden_size_fc1 = 4
+  num_lstm_layers = 2
   num_class = 2
-  learning_rate = 0.001
+  learning_rate = 0.05
   #Parameters which can be changed after model instantiation
   batch_size = 16
   step_size = 512  # 128Hz, and 4s of data 
