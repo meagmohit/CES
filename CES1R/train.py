@@ -47,11 +47,12 @@ class Config(object):
   hidden_size_fc1 = 4
   num_lstm_layers = 2
   num_class = 2
-  learning_rate = 0.05
+  learning_rate = 0.1
   #Parameters which can be changed after model instantiation
   batch_size = 16
   step_size = 512  # 128Hz, and 4s of data 
   num_electrodes = 14
+  num_features = 2
 
 class model(object):
 
@@ -64,10 +65,11 @@ class model(object):
     self._hidden_size_fc1 = hidden_size_fc1 = config.hidden_size_fc1
     self._num_lstm_layers = num_lstm_layers = config.num_lstm_layers   
     self._num_class = num_class = config.num_class
+    self._num_features = num_features = config.num_features
     self._learning_rate = tf.Variable(config.learning_rate, trainable=False)
 
     with tf.name_scope('input'):
-      self._input_feature = input_feature = tf.placeholder(tf.float32,  shape=[batch_size, step_size, 5], name='feature_input')
+      self._input_feature = input_feature = tf.placeholder(tf.float32,  shape=[batch_size, step_size, num_features], name='feature_input')
       self._input_targets = input_targets = tf.placeholder(tf.int32, shape=[batch_size, num_class])
 
     layer_name = 'LSTM'

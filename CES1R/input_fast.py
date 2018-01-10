@@ -21,6 +21,7 @@ class input(object):
     self._num_electrodes = config.num_electrodes
     self._num_class = config.num_class
     self._data_path = data_path
+    self._num_features = config.num_features
 
     self._batch_state = 0
 
@@ -49,6 +50,7 @@ class input(object):
     #csp = mne.decoding.CSP(n_components=5, cov_est='epoch', transform_into='csp_space')
     file_pi = open('csp.obj', 'r') 
     self._csp = mycsp = pickle.load(file_pi) #csp.fit(data,label)
+    file_pi.close()
     
      
   def next_batch(self, sess, flag):
@@ -67,7 +69,7 @@ class input(object):
       return
 
     
-    data = np.zeros([self._batch_size, self._step_size, 5])
+    data = np.zeros([self._batch_size, self._step_size, self._num_features])
     label = np.zeros([self._batch_size, self._num_class])
     
     for ind, filename in enumerate(batch_files):
@@ -77,7 +79,7 @@ class input(object):
       rdata = (self._csp.transform(X))
       # Data Pre-Processing
       # Normalization
-      data[ind, :, :] = np.multiply(rdata - (rdata.mean(0).reshape([1,5])), 1/(10e-12 + rdata.std(0).reshape([1,5])))
+      data[ind, :, :] = np.multiply(rdata - (rdata.mean(0).reshape([1,self._num_features])), 1/(10e-12 + rdata.std(0).reshape([1,self._num_features])))
       f_temp = open(filepath_lab,'r')
       lab_temp = f_temp.read()
       f_temp.close()
