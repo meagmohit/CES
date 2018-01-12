@@ -8,4 +8,4 @@
 #
 module load cudatoolkit/8.0
 use tensorflow-gpu-0.12.1
-srun -N1 -n1 python train2.py --mode=train
+srun -N1 -n1 python train.py --mode=train

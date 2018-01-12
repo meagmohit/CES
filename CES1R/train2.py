@@ -72,17 +72,24 @@ class model(object):
       self._input_feature = input_feature = tf.placeholder(tf.float32,  shape=[batch_size, step_size, num_features], name='feature_input')
       self._input_targets = input_targets = tf.placeholder(tf.int32, shape=[batch_size, num_class])
 
+    layer_name = 'pre-LSTM'
+    with tf.name_scope('layer_name'):
+      _X = tf.transpose(input_feature, [1, 0, 2])
+      _X = tf.reshape(_X, [-1, num_features])
+      pl_weights_1 = tf.Variable(tf.truncated_normal([num_features, hidden_size_lstm], stddev=0.001), name='pl_weights_1')
+      pl_biases_1 = tf.Variable(tf.zeros([hidden_size_lstm]), name='pl_biases_1')
+      _X = tf.nn.relu(tf.matmul(_X, pl_weights_1) + pl_biases_1)
+      _X = tf.split(0, step_size, _X)
+
     layer_name = 'LSTM'
     with tf.name_scope(layer_name):
       lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(hidden_size_lstm, forget_bias=1.0, state_is_tuple=True)
       cell = tf.nn.rnn_cell.MultiRNNCell([lstm_cell] * num_lstm_layers)
-      self._initial_state = cell.zero_state(batch_size, tf.float32)
     
-      inputs = [tf.squeeze(input_, [1]) for input_ in tf.split(1, step_size, input_feature)]
-      outputs, state = rnn.rnn(cell, inputs, initial_state=self._initial_state)
+      outputs, state = rnn.rnn(cell, _X, dtype=tf.float32)
       self._state = state
       #output = tf.reshape(tf.concat(1,outputs), [-1, hidden_size_lstm])
-      output = tf.reshape(outputs[-1], [-1, hidden_size_lstm])
+      output = outputs[-1]
 
     layer_name = 'fully_connected_1'
     with tf.name_scope(layer_name):
@@ -111,16 +118,11 @@ class model(object):
     self._final_tensor = final_tensor = tf.nn.softmax(final_logits, name='final_result')
     tf.summary.histogram('final_result' + '/activations', final_tensor)
 
-    ##mask_reshape = tf.reshape(tf.sign(tf.reduce_max(tf.abs(input_feature), reduction_indices=2)), [-1])
-    ##self._final_result = final_result = tf.argmax(final_tensor,1, name='final_output')
 
     with tf.name_scope('accuracy'):
       with tf.name_scope('correct_prediction'):
-        #self._correct_prediction = correct_prediction = tf.equal(final_result, tf.cast(tf.reshape(self._input_targets, [-1]), tf.int64))i
         correct_prediction = tf.cast(tf.equal(tf.argmax(final_logits, 1), tf.argmax(self._input_targets, 1)),tf.float32)
       with tf.name_scope('accuracy'):
-        #temp_step = (tf.cast(correct_prediction, tf.float32))
-        #self._evaluation_step = evaluation_step = tf.reduce_sum(temp_step*mask_reshape) / tf.reduce_sum(mask_reshape)
         self._evaluation_step = evaluation_step = tf.reduce_mean(correct_prediction)
       tf.summary.scalar('accuracy', evaluation_step)
 
@@ -130,7 +132,6 @@ class model(object):
 
     # Part exclusively required for training the model 
     with tf.name_scope('loss'):
-      #loss = tf.nn.seq2seq.sequence_loss_by_example([final_logits], [tf.reshape(self._input_targets, [-1])], [mask_reshape] )
       loss = tf.nn.softmax_cross_entropy_with_logits(labels=self._input_targets, logits=final_logits)
       with tf.name_scope('total'):
         self._loss_mean = loss_mean = tf.reduce_mean(loss)
@@ -139,12 +140,6 @@ class model(object):
     with tf.name_scope('train'):
       optimizer = tf.train.AdamOptimizer(self._learning_rate)
       self._train_step = train_step = optimizer.minimize(loss_mean)
-      ##self._tvars = tvars = tf.trainable_variables()
-      ##self._grads, _ = tf.clip_by_global_norm(tf.gradients(loss, tvars), 1)
-      ##grads = self._grads
-      #self._grads_and_vars = grads_and_vars = optimizer.compute_gradients(loss)
-      ##self._train_step = train_step = optimizer.apply_gradients(zip(grads,tvars))
-      
 
     self._new_learning_rate = tf.placeholder(tf.float32, shape=[], name="new_learning_rate")
     self._learning_rate_update = tf.assign(self._learning_rate, self._new_learning_rate)    
@@ -171,10 +166,6 @@ class model(object):
   @property
   def input_targets(self):
     return self._input_targets
-
-  @property
-  def initial_state(self):
-    return self._initial_state
 
   @property
   def sequence_len(self):
@@ -342,14 +333,14 @@ def main(_):
       return
 
   print("\033[94m Training begins... \033[0m")
-  state = sess.run(m.initial_state)
+  #state = sess.run(m.initial_state)
   for i in range(FLAGS.iterations):
    
     input_feature, input_targets = input_stream.next_batch(sess, flag='train')
     feed_dict = {m.input_feature: input_feature, m.input_targets: input_targets}
     train_summary, _ = sess.run([merged, m.train_step], feed_dict=feed_dict)
     train_writer.add_summary(train_summary, i)
-    state, train_accuracy, loss_value, learning_rate = sess.run([m.state, m.evaluation_step, m.loss_mean, m.learning_rate], feed_dict=feed_dict)
+    train_accuracy, loss_value, learning_rate = sess.run([m.evaluation_step, m.loss_mean, m.learning_rate], feed_dict=feed_dict)
     
     input_feature, input_targets = input_stream.next_batch(sess, flag='test')
     feed_dict = {m.input_feature: input_feature, m.input_targets: input_targets}
