@@ -3,6 +3,8 @@
 **/*.temp
 **/*.pdf
 **/*.out
+**/*.data
+**/*.lab
 
 **/logs
 **/data
