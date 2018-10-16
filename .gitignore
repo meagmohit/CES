@@ -3,11 +3,13 @@
 **/*.temp
 **/*.pdf
 **/*.out
-**/*.data
+**/*.dat
 **/*.lab
 
 **/logs
 **/data
+**/old_data
+**/processed_data
 **/result
 **/out
 **/out-old
