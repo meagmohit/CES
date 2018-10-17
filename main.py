@@ -1,3 +1,9 @@
+# Created by Mohit Agarwal on 10/10/2018
+# Georgia Institute of Technology
+# Copyright 2018 Mohit Agarwal. All rights reserved.
+
+# Pre-Processes the data in "data_dir" folder and arranges for train.test in "processed_data" folder
+
 import numpy as np
 import os
 import random
@@ -50,9 +56,9 @@ def train_test_data_mode0(EEG_data, prod_ids, sub_ids, labels):
     total_prod_in_train = total_products - total_prod_in_test
     total_train_samples = total_subjects*ncr(total_prod_in_train,2)
     total_test_samples = total_subjects*ncr(total_prod_in_test,2)
-    X_train = np.zeros([total_train_samples,Ne,Nt])
+    X_train = np.zeros([total_train_samples,Ne,Nt*2])
     Y_train = np.zeros([total_train_samples,1])
-    X_test = np.zeros([total_test_samples,Ne,Nt])
+    X_test = np.zeros([total_test_samples,Ne,Nt*2])
     Y_test = np.zeros([total_test_samples,1])
     global_idx_train = 0
     global_idx_test = 0
@@ -75,7 +81,8 @@ def train_test_data_mode0(EEG_data, prod_ids, sub_ids, labels):
                 X_temp = EEG_data[EEG_ids,:,:]                              # X_temp is 50x768x19
                 X_temp_avg_2 = np.sum(X_temp,axis=0)                        # X_temp_sum is 768x19  average of all waveforms
                 #Preparing Data
-                X_train[global_idx_train,:,:] = X_temp_avg_1.transpose(1,0) - X_temp_avg_2.transpose(1,0)
+                X_train[global_idx_train,:,0:Nt] = X_temp_avg_1.transpose(1,0)
+                X_train[global_idx_train,:,Nt:2*Nt] = X_temp_avg_2.transpose(1,0)
                 t = (labels[:,0]==sub_idx)&(labels[:,2]==train_prod_ids[prod_idx_1])&(labels[:,3]==train_prod_ids[prod_idx_2])
                 label_ids = [i for i, x in enumerate(t) if x]
                 Y_train[global_idx_train,:] = int(stats.mode(labels[label_ids,4])[0])
@@ -94,7 +101,9 @@ def train_test_data_mode0(EEG_data, prod_ids, sub_ids, labels):
                 X_temp = EEG_data[EEG_ids,:,:]                              # X_temp is 50x768x19
                 X_temp_avg_2 = np.sum(X_temp,axis=0)                        # X_temp_sum is 768x19  average of all waveforms
                 #Preparing Data
-                X_test[global_idx_test,:,:] = X_temp_avg_1.transpose(1,0) - X_temp_avg_2.transpose(1,0)
+                #X_test[global_idx_test,:,:] = X_temp_avg_1.transpose(1,0) - X_temp_avg_2.transpose(1,0)
+                X_test[global_idx_test,:,0:Nt] = X_temp_avg_1.transpose(1,0)
+                X_test[global_idx_test,:,Nt:2*Nt] = X_temp_avg_2.transpose(1,0)
                 t = (labels[:,0]==sub_idx)&(labels[:,2]==test_prod_ids[prod_idx_1])&(labels[:,3]==test_prod_ids[prod_idx_2])
                 label_ids = [i for i, x in enumerate(t) if x]
                 Y_test[global_idx_test,:] = int(stats.mode(labels[label_ids,4])[0])

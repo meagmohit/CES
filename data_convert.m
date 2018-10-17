@@ -5,7 +5,7 @@
 % Converts EEG data from set files to .dat/.lab files for processing
 %
 % Please follow the following steps:
-% 1. Open 'EEGLAB' and load all 15 datasets from "predict future consumer choices" paper
+% 1. Open 'EEGLAB' and load all 15 datasets from "predict future consumer choices" paper (or 14 from EEG Ariel Set Files)
 % 2. Run the script
 %
 % Output is in the following format: S_<sub_id>_<trial_id>.(dat/lab)
